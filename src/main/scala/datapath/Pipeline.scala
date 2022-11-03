@@ -152,7 +152,7 @@ object Pipeline {
     fwd.addr := use.addr
     fwd.at := use.at
     fwd.data := use.data
-    reg_news.reverse.foreach(r_new => when(use.addr === r_new.addr && use.addr =/= 0) {
+    reg_news.reverse.foreach(r_new => when(r_new.enable && use.addr === r_new.addr && use.addr =/= 0) {
       fwd.data := r_new.data
     })
     fwd
