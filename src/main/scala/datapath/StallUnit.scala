@@ -1,7 +1,6 @@
 package datapath
 
 import datapath.Data._
-import global.Const._
 import spinal.core._
 
 import scala.language.postfixOps

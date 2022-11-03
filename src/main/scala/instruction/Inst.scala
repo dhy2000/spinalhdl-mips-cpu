@@ -183,10 +183,6 @@ object Inst {
     }, // jr
   )
 
-  def instToString(code: Int): String = {
-    "TODO"
-  }
-
   object Tag extends SpinalEnum {
     val nop: SpinalEnumElement[Tag.this.type] = newElement()
     val add, sub, addu, subu, and, or, xor, nor, slt, sltu, sll, srl, sra, sllv, srlv, srav = newElement()

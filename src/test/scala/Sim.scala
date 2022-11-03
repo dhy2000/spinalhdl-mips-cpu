@@ -26,7 +26,7 @@ object Sim {
   def main(args: Array[String]): Unit = {
     val instMemory = new ROM(4096, readCode())
     val dataMemory = new RAM(4096)
-    val outFileWriter = new PrintWriter(new File(outputFile));
+    val outFileWriter = new PrintWriter(new File(outputFile))
     if (args.length < 1) {
       println("no simulation backend given.")
       System.exit(1)
