@@ -70,6 +70,83 @@ object Instruction {
       }
     }, // sub
     new Instruction {
+      override val format: MaskedLiteral = M"000000---------------00000100100"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.and
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = PipeStage.E
+      override val new_at: Int = PipeStage.M
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rd
+      }
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        bus.nxt_new.data := bus.use1.data & bus.use2.data
+      }
+    }, // and
+    new Instruction {
+      override val format: MaskedLiteral = M"000000---------------00000100101"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.or
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = PipeStage.E
+      override val new_at: Int = PipeStage.M
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rd
+      }
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        bus.nxt_new.data := bus.use1.data | bus.use2.data
+      }
+    }, // or
+    new Instruction {
+      override val format: MaskedLiteral = M"000000---------------00000101010"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.slt
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = PipeStage.E
+      override val new_at: Int = PipeStage.M
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rd
+      }
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        bus.nxt_new.data := (bus.use1.data.asSInt < bus.use2.data.asSInt).asUInt(Word.width bits)
+      }
+    }, // slt
+    new Instruction {
+      override val format: MaskedLiteral = M"000000---------------00000101011"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.sltu
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = PipeStage.E
+      override val new_at: Int = PipeStage.M
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rd
+      }
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        bus.nxt_new.data := (bus.use1.data < bus.use2.data).asUInt(Word.width bits)
+      }
+    }, // sltu
+    new Instruction {
+      override val format: MaskedLiteral = M"001111--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.lui
+      override val use1_at: Int = 0
+      override val use2_at: Int = 0
+      override val new_at: Int = PipeStage.E
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rt
+        bus.nxt_new.data := (bus.field.imm16 ## B"16'b0").asUInt
+      }
+    }, // lui
+    new Instruction {
       override val format: MaskedLiteral = M"001101--------------------------"
       override val tag: SpinalEnumElement[Tag.type] = Tag.ori
       override val use1_at: Int = PipeStage.E
@@ -86,18 +163,37 @@ object Instruction {
       }
     }, // ori
     new Instruction {
-      override val format: MaskedLiteral = M"001111--------------------------"
-      override val tag: SpinalEnumElement[Tag.type] = Tag.lui
-      override val use1_at: Int = 0
+      override val format: MaskedLiteral = M"001100--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.andi
+      override val use1_at: Int = PipeStage.E
       override val use2_at: Int = 0
-      override val new_at: Int = PipeStage.E
+      override val new_at: Int = PipeStage.M
 
       override def d(bus: BusInst, ni: NextInstr): Unit = {
         bus.nxt_new.enable := True
         bus.nxt_new.addr := bus.field.rt
-        bus.nxt_new.data := (bus.field.imm16 ## B"16'b0").asUInt
       }
-    }, // lui
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        bus.nxt_new.data := bus.use1.data & (B"16'b00" ## bus.field.imm16).asUInt
+      }
+    }, // andi
+    new Instruction {
+      override val format: MaskedLiteral = M"001000--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.addi
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = 0
+      override val new_at: Int = PipeStage.M
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rt
+      }
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        bus.nxt_new.data := bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
+      }
+    }, // addi
     new Instruction {
       override val format: MaskedLiteral = M"100011--------------------------"
       override val tag: SpinalEnumElement[Tag.type] = Tag.lw
@@ -119,6 +215,46 @@ object Instruction {
       }
     }, // lw
     new Instruction {
+      override val format: MaskedLiteral = M"100000--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.lb
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = 0
+      override val new_at: Int = PipeStage.W
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rt
+      }
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        mem.addr.addr := bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
+      }
+
+      override def w(bus: BusInst, mem: BusMem): Unit = {
+        bus.nxt_new.data := mem.addr.addr(1 downto 0).muxList(for (i <- 0 until 4) yield (i, mem.load.data(i * 8 - 1 downto i * 8))).asSInt.resize(Word.width).asUInt
+      }
+    }, // lb
+    new Instruction {
+      override val format: MaskedLiteral = M"100001--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.lh
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = 0
+      override val new_at: Int = PipeStage.W
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        bus.nxt_new.enable := True
+        bus.nxt_new.addr := bus.field.rt
+      }
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        mem.addr.addr := bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
+      }
+
+      override def w(bus: BusInst, mem: BusMem): Unit = {
+        bus.nxt_new.data := mem.addr.addr(1).asBits.muxList(for (i <- 0 until 2) yield (i, mem.load.data(i * 16 - 1 downto i * 16))).asSInt.resize(Word.width).asUInt
+      }
+    }, // lh
+    new Instruction {
       override val format: MaskedLiteral = M"101011--------------------------"
       override val tag: SpinalEnumElement[Tag.type] = Tag.sw
       override val use1_at: Int = PipeStage.E
@@ -135,6 +271,40 @@ object Instruction {
       }
     }, // sw
     new Instruction {
+      override val format: MaskedLiteral = M"101000--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.sb
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = PipeStage.M
+      override val new_at: Int = 0
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        mem.addr.addr := bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
+        mem.addr.byteEn := (B"4'b0001" << mem.addr.addr(1 downto 0)).resize(4)
+      }
+
+      override def m(bus: BusInst, mem: BusMem): Unit = {
+        val by = bus.use2.data(7 downto 0)
+        mem.store.data := (by ## by ## by ## by).asUInt
+      }
+    }, // sb
+    new Instruction {
+      override val format: MaskedLiteral = M"101001--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.sh
+      override val use1_at: Int = PipeStage.E
+      override val use2_at: Int = PipeStage.M
+      override val new_at: Int = 0
+
+      override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
+        mem.addr.addr := bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
+        mem.addr.byteEn := (B"4'b0011" << (mem.addr.addr(1) ## B"1'b0").asUInt).resize(4)
+      }
+
+      override def m(bus: BusInst, mem: BusMem): Unit = {
+        val hb = bus.use2.data(15 downto 0)
+        mem.store.data := (hb ## hb).asUInt
+      }
+    }, // sh
+    new Instruction {
       override val format: MaskedLiteral = M"000100--------------------------"
       override val tag: SpinalEnumElement[Tag.type] = Tag.beq
       override val use1_at: Int = PipeStage.D
@@ -146,6 +316,18 @@ object Instruction {
         ni.pc := bus.inst.addr + 4 + (bus.field.imm16 ## B"2'b00").asSInt.resize(Word.width).asUInt
       }
     }, // beq
+    new Instruction {
+      override val format: MaskedLiteral = M"000101--------------------------"
+      override val tag: SpinalEnumElement[Tag.type] = Tag.bne
+      override val use1_at: Int = PipeStage.D
+      override val use2_at: Int = PipeStage.D
+      override val new_at: Int = 0
+
+      override def d(bus: BusInst, ni: NextInstr): Unit = {
+        ni.branch := (bus.use1.data =/= bus.use2.data)
+        ni.pc := bus.inst.addr + 4 + (bus.field.imm16 ## B"2'b00").asSInt.resize(Word.width).asUInt
+      }
+    }, // bne
     new Instruction {
       override val format: MaskedLiteral = M"000011--------------------------"
       override val tag: SpinalEnumElement[Tag.type] = Tag.jal
@@ -173,6 +355,7 @@ object Instruction {
         ni.pc := bus.use1.data
       }
     }, // jr
+
   )
 
   object Tag extends SpinalEnum {
