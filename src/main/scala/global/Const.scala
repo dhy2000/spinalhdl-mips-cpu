@@ -17,16 +17,15 @@ object Const {
     val exception = 0x4180
   }
 
-  object Pipeline {
+  object PipeStage {
     val enable = true
     val numStage = 5
-    object Stage {
-      val F = 1
-      val D = 2
-      val E = 3
-      val M = 4
-      val W = 5
-    }
+
+    val F = 1
+    val D = 2
+    val E = 3
+    val M = 4
+    val W = 5
   }
 
   object Generate {

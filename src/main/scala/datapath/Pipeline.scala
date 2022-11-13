@@ -1,9 +1,9 @@
 package datapath
 
 import component._
-import datapath.Data._
+import datapath.Bus._
 import datapath.Pipeline.forwarded
-import instruction.Inst
+import instruction.Instruction
 import spinal.core._
 
 import scala.language.postfixOps
@@ -34,7 +34,7 @@ case class Pipeline(override val clockDomain: ClockDomain) extends ClockingArea(
   private val e_use1_fwd = new RegUse
   private val e_use2_fwd = new RegUse
   private val e_new = RegNext(Mux(stall, RegNew(), d_new)) init RegNew()
-  private val mdu = new MulDivideUnit
+  private val mdu = new MulDivSlot
 
   // M
   val m_inst: Instr = RegNext(e_inst) init Instr()
@@ -65,7 +65,7 @@ case class Pipeline(override val clockDomain: ClockDomain) extends ClockingArea(
   pc.io.branch := next_inst.branch
   pc.io.next := next_inst.pc
   i_inst.addr := pc.io.current
-  i_inst.inst := Inst.Tag.nop
+  i_inst.inst := Instruction.Tag.nop
 
   // D
   d_inst.addr := d_inst_addr
@@ -86,14 +86,13 @@ case class Pipeline(override val clockDomain: ClockDomain) extends ClockingArea(
 
   // initialize use and new
   // br and d behavior
-  Inst.instrSet.foreach(inst => when(d_inst.inst === inst.tag) {
+  Instruction.instrSet.foreach(inst => when(d_inst.inst === inst.tag) {
     d_use1.use := Bool(inst.use1_at != 0)
     d_use2.use := Bool(inst.use2_at != 0)
     d_use1.at := U(inst.use1_at)
     d_use2.at := U(inst.use2_at)
     d_new.new_at := U(inst.new_at)
-    inst.br(d_inst, d_field, d_use1_fwd, d_use2_fwd, next_inst)
-    inst.d(d_inst, d_field, d_use1_fwd, d_use2_fwd, d_new)
+    inst.d(new Instruction.BusInst(d_inst, d_field, d_use1_fwd, d_use2_fwd, RegNew(), d_new), next_inst)
   })
 
   // E
@@ -107,8 +106,8 @@ case class Pipeline(override val clockDomain: ClockDomain) extends ClockingArea(
   m_mem_addr := MemAddress()
 
   // e behavior
-  Inst.instrSet.foreach(inst => when(e_inst.inst === inst.tag) {
-    inst.e(e_inst, e_field, e_use1_fwd, e_use2_fwd, e_new, m_new, mdu, m_mem_addr, m_mem_store)
+  Instruction.instrSet.foreach(inst => when(e_inst.inst === inst.tag) {
+    inst.e(new Instruction.BusInst(e_inst, e_field, e_use1_fwd, e_use2_fwd, e_new, m_new), mdu.io, new Instruction.BusMem(m_mem_addr, m_mem_store, MemLoad()))
   })
 
   // M
@@ -118,29 +117,29 @@ case class Pipeline(override val clockDomain: ClockDomain) extends ClockingArea(
   w_new := m_new
 
   // m behavior
-  Inst.instrSet.foreach(inst => when(m_inst.inst === inst.tag) {
-    inst.m(m_inst, m_field, m_use1_fwd, m_use2_fwd, m_new, w_new, m_mem_addr, m_mem_store)
+  Instruction.instrSet.foreach(inst => when(m_inst.inst === inst.tag) {
+    inst.m(new Instruction.BusInst(m_inst, m_field, m_use1_fwd, m_use2_fwd, m_new, w_new), new Instruction.BusMem(m_mem_addr, m_mem_store, MemLoad()))
   })
 
   // W
   reg_new := w_new
 
   // w behavior
-  Inst.instrSet.foreach(inst => when(w_inst.inst === inst.tag) {
-    inst.w(w_inst, w_field, w_use1, w_use2, w_new, reg_new, w_mem_addr, w_mem_store, w_mem_load)
+  Instruction.instrSet.foreach(inst => when(w_inst.inst === inst.tag) {
+    inst.w(new Instruction.BusInst(w_inst, w_field, w_use1, w_use2, w_new, reg_new), new Instruction.BusMem(w_mem_addr, w_mem_store, w_mem_load))
   })
 
   grf.io.writeEnable := reg_new.enable
   grf.io.writeAddr := reg_new.addr
   grf.io.writeData := reg_new.data
 
-  private val stallUnit = new StallUnit
+  private val stallUnit = new StallCtrl
   stall := stallUnit.io.d_stall
   stallUnit.io.d_use1 := d_use1
   stallUnit.io.d_use2 := d_use2
   stallUnit.io.e_new := e_new
   stallUnit.io.m_new := m_new
-  stallUnit.io.d_isMd := B(List(Inst.Tag.mult, Inst.Tag.div, Inst.Tag.multu, Inst.Tag.divu, Inst.Tag.mthi, Inst.Tag.mtlo, Inst.Tag.mfhi, Inst.Tag.mflo)
+  stallUnit.io.d_isMd := B(List(Instruction.Tag.mult, Instruction.Tag.div, Instruction.Tag.multu, Instruction.Tag.divu, Instruction.Tag.mthi, Instruction.Tag.mtlo, Instruction.Tag.mfhi, Instruction.Tag.mflo)
     .map(d_inst.inst === _)).orR
   stallUnit.io.e_mdCount := mdu.io.status.count
 }

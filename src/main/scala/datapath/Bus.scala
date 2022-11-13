@@ -1,17 +1,17 @@
 package datapath
 
 import global.Const._
-import instruction.Inst
+import instruction.Instruction
 import spinal.core._
 
 import scala.language.postfixOps
 
-object Data {
+object Bus {
   // F
   class Instr extends Bundle {
     val addr: UInt = UInt(Word.width bits)
     val code: Bits = Bits(Word.width bits)
-    val inst: SpinalEnumCraft[Inst.Tag.type] = Inst.Tag()
+    val inst: SpinalEnumCraft[Instruction.Tag.type] = Instruction.Tag()
   }
 
   object Instr {
@@ -19,7 +19,7 @@ object Data {
       val zero = new Instr
       zero.addr := 0
       zero.code := 0
-      zero.inst := Inst.Tag.nop
+      zero.inst := Instruction.Tag.nop
       zero
     }
   }

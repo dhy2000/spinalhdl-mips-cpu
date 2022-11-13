@@ -1,8 +1,8 @@
 package component
 
-import datapath.Data._
+import datapath.Bus._
 import global.Const._
-import instruction.Inst
+import instruction.Instruction
 import spinal.core._
 
 import scala.language.postfixOps
@@ -12,11 +12,11 @@ class Decoder extends Component {
   // when.elseWhen.elseWhen...
   io.valid := True
   switch(io.code) {
-    Inst.instrSet.foreach(inst => is(inst.opcode) {
+    Instruction.instrSet.foreach(inst => is(inst.format) {
       io.inst := inst.tag
     })
     default {
-      io.inst := Inst.Tag.nop
+      io.inst := Instruction.Tag.nop
       io.valid := False
     }
   }
@@ -38,7 +38,7 @@ object Decoder {
 
   class IoBundle extends Bundle {
     val code: Bits = in Bits (Word.width bits)
-    val inst: SpinalEnumCraft[Inst.Tag.type] = out(Inst.Tag())
+    val inst: SpinalEnumCraft[Instruction.Tag.type] = out(Instruction.Tag())
     val field: Field = out(new Field)
     val valid: Bool = out Bool()
   }

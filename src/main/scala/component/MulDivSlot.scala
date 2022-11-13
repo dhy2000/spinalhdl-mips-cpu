@@ -5,9 +5,9 @@ import spinal.core._
 
 import scala.language.postfixOps
 
-class MulDivideUnit extends Component {
+class MulDivSlot extends Component {
   // only simulate the delay slot of multiply/divide instruction
-  val io = new MulDivideUnit.IoBundle
+  val io = new MulDivSlot.IoBundle
   noIoPrefix()
 
   private val hi, lo = Reg(UInt(Word.width bits)) init 0
@@ -27,7 +27,7 @@ class MulDivideUnit extends Component {
   }
 }
 
-object MulDivideUnit {
+object MulDivSlot {
   class Input extends Bundle {
     val hi, lo: UInt = UInt(Word.width bits)  // expected mul/div result
     val start: Bool = Bool()

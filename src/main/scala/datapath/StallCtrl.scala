@@ -1,13 +1,13 @@
 package datapath
 
-import datapath.Data._
+import datapath.Bus._
 import spinal.core._
 
 import scala.language.postfixOps
 
-class StallUnit extends Component {
+class StallCtrl extends Component {
   // stall at d
-  val io = new StallUnit.IoBundle
+  val io = new StallCtrl.IoBundle
   val mdBusy: Bool = io.d_isMd && (io.e_mdCount > 1)
 
   val use1: Bool = io.d_use1.use && io.d_use1.addr =/= 0
@@ -22,7 +22,7 @@ class StallUnit extends Component {
   io.d_stall := (wait1 || wait2) || mdBusy
 }
 
-object StallUnit {
+object StallCtrl {
   class IoBundle extends Bundle {
     val d_use1: RegUse = in(new RegUse)
     val d_use2: RegUse = in(new RegUse)
