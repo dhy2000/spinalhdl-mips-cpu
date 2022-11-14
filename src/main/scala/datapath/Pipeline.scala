@@ -141,7 +141,7 @@ case class Pipeline(override val clockDomain: ClockDomain) extends ClockingArea(
   stallUnit.io.m_new := m_new
   stallUnit.io.d_isMd := B(List(Instruction.Tag.mult, Instruction.Tag.div, Instruction.Tag.multu, Instruction.Tag.divu, Instruction.Tag.mthi, Instruction.Tag.mtlo, Instruction.Tag.mfhi, Instruction.Tag.mflo)
     .map(d_inst.inst === _)).orR
-  stallUnit.io.e_mdCount := mdu.io.status.count
+  stallUnit.io.e_mdBusy := mdu.io.input.start || (mdu.io.status.count > 1)
 }
 
 object Pipeline {
