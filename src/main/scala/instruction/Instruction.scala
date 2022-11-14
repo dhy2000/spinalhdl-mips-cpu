@@ -231,7 +231,7 @@ object Instruction {
       }
 
       override def w(bus: BusInst, mem: BusMem): Unit = {
-        bus.nxt_new.data := mem.addr.addr(1 downto 0).muxList(for (i <- 0 until 4) yield (i, mem.load.data(i * 8 - 1 downto i * 8))).asSInt.resize(Word.width).asUInt
+        bus.nxt_new.data := mem.addr.addr(1 downto 0).muxList(for (i <- 0 until 4) yield (i, mem.load.data(i * 8 + 7 downto i * 8))).asSInt.resize(Word.width).asUInt
       }
     }, // lb
     new Instruction {
@@ -251,7 +251,7 @@ object Instruction {
       }
 
       override def w(bus: BusInst, mem: BusMem): Unit = {
-        bus.nxt_new.data := mem.addr.addr(1).asBits.muxList(for (i <- 0 until 2) yield (i, mem.load.data(i * 16 - 1 downto i * 16))).asSInt.resize(Word.width).asUInt
+        bus.nxt_new.data := mem.addr.addr(1).asBits.muxList(for (i <- 0 until 2) yield (i, mem.load.data(i * 16 + 15 downto i * 16))).asSInt.resize(Word.width).asUInt
       }
     }, // lh
     new Instruction {
@@ -278,8 +278,9 @@ object Instruction {
       override val new_at: Int = 0
 
       override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
-        mem.addr.addr := bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
-        mem.addr.byteEn := (B"4'b0001" << mem.addr.addr(1 downto 0)).resize(4)
+        val mem_addr = bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
+        mem.addr.addr := mem_addr
+        mem.addr.byteEn := (B"4'b0001" << mem_addr(1 downto 0)).resize(4)
       }
 
       override def m(bus: BusInst, mem: BusMem): Unit = {
@@ -295,8 +296,9 @@ object Instruction {
       override val new_at: Int = 0
 
       override def e(bus: BusInst, md: MulDivSlot.IoBundle, mem: BusMem): Unit = {
-        mem.addr.addr := bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
-        mem.addr.byteEn := (B"4'b0011" << (mem.addr.addr(1) ## B"1'b0").asUInt).resize(4)
+        val mem_addr = bus.use1.data + bus.field.imm16.asSInt.resize(Word.width).asUInt
+        mem.addr.addr := mem_addr
+        mem.addr.byteEn := (B"4'b0011" << (mem_addr(1) ## B"1'b0").asUInt).resize(4)
       }
 
       override def m(bus: BusInst, mem: BusMem): Unit = {

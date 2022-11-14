@@ -21,7 +21,7 @@ class CPU extends Component {
   io.macroscopic_pc := 0
   io.i_inst_addr := pipeline.i_inst.addr
   io.m_inst_addr := pipeline.m_inst.addr
-  io.m_data_addr := pipeline.m_mem_addr.addr
+  io.m_data_addr := (pipeline.m_mem_addr.addr(31 downto 2) ## U"2'b00").asUInt
   io.m_data_wdata := pipeline.m_mem_store.data
   io.m_data_byteen := pipeline.m_mem_addr.byteEn
   io.w_inst_addr := pipeline.w_inst.addr
