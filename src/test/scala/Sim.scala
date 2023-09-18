@@ -72,6 +72,7 @@ object Sim {
         if (dut.io.m_data_byteen.toInt != 0) {
           val addr = (dut.io.m_data_addr.toLong >> 2).toInt
           dataMemory.write(addr, dut.io.m_data_byteen.toInt, dut.io.m_data_wdata.toLong)
+          dut.io.m_data_rdata #= dataMemory.read(addr)
           val memoryOut = f"$time%d@${dut.io.m_inst_addr.toLong}%08x: *${dut.io.m_data_addr.toLong}%08x <= ${dataMemory.read(addr)}%08x"
           println(memoryOut)
           outFileWriter.write(memoryOut)
