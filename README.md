@@ -29,7 +29,36 @@
 
 然后用软件对每个指令在数据通路中生成相应的组合逻辑电路，并根据当前的指令种类以 MUX 选择指令结果。用 `when` 描述条件分支，利用多次 `:=` 赋值取最后一次的特性，构建 MUX 电路。
 
+当前 CPU 支持的指令集为 MIPS32 的如下子集（不含中断异常行为）：
+
+```
+add, sub, and, or, slt, sltu
+addi, addiu, andi, ori, lui
+lw, lh, lb, sw, sh, sb
+beq, bne
+j, jal, jr
+mult, multu, div, divu, mfhi, mflo, mthi, mtlo
+```
+
 ## 仿真测试
 
-- 用 Scala 编写 "testbench"
-- 调用 verilator/iverilog 或 VCS 作为后端运行仿真
+- 用 Scala 编写 "testbench" 并建模 IM 与 DM
+- 调用 verilator/iverilog 或 vcs 作为后端运行仿真
+
+## 运行
+
+要生成 Verilog 代码，直接在终端执行以下命令（如果是首次运行，sbt 将联网自动下载依赖）：
+
+```bash
+sbt "runMain CPU"
+```
+
+生成的 Verilog 代码位于 `verilog/CPU.v` 。
+
+要运行仿真，首先需要安装 Verilator/Icarus Verilog/Synopsys VCS 三种仿真工具之一，并准备好要让 CPU 执行的程序机器码文件 `code.txt` （每行为一条指令的十六进制机器码），而后在终端执行以下命令（以 Verilator 仿真工具为例，如使用后两种仿真工具，请将 `verilator` 替换为 `iverilog` 或 `vcs`）：
+
+```bash
+sbt "Test/runMain Sim verilator"
+```
+
+仿真过程会输出写寄存器和写内存的行为序列，输出到终端以及 `output.txt` 中。
